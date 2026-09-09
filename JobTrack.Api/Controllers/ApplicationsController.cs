@@ -46,5 +46,19 @@ namespace JobTrack.Api.Controllers
 
             return Ok(application);
         }
-    }
+
+        [HttpPost]
+        public ActionResult<JobApplication> Create(JobApplication application)
+        {
+            application.Id = applications.Max(a => a.Id) + 1;
+
+            applications.Add(application);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = application.Id },
+                application
+            );
+        }
+    }   
 }
