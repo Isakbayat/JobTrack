@@ -60,5 +60,23 @@ namespace JobTrack.Api.Controllers
                 application
             );
         }
-    }   
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, JobApplication updatedApplication)
+        {
+            var application = applications.FirstOrDefault(a => a.Id == id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            application.Company = updatedApplication.Company;
+            application.Position = updatedApplication.Position;
+            application.AppliedDate = updatedApplication.AppliedDate;
+            application.Status = updatedApplication.Status;
+
+            return NoContent();
+        }
+    }
 }
