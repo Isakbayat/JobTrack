@@ -33,5 +33,18 @@ namespace JobTrack.Api.Controllers
         {
             return Ok(applications);
         }
+
+        [HttpGet("{id}")]
+        public ActionResult<JobApplication> GetById(int id)
+        {
+            var application = applications.FirstOrDefault(a => a.Id == id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(application);
+        }
     }
 }
