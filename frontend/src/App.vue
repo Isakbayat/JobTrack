@@ -5,6 +5,7 @@
   const loading = ref(true)
   const error = ref('')
   const saving = ref(false)
+  const editingId = ref(null)
 
   const company = ref('')
   const position = ref('')
@@ -27,11 +28,31 @@
     }
   }
 
-  async function createApplication() {
+  function resetForm() {
+    company.value = ''
+    position.value = ''
+    appliedDate.value = ''
+    status.value = 'Applied'
+    editingId.value = null
+  }
+
+  function startEdit(application) {
+    editingId.value = application.id
+    company.value = application.company
+    position.value = application.position
+    appliedDate.value = application.appliedDate.split('T')[0]
+    status.value = application.status
+  }
+
+  function cancelEdit() {
+    resetForm()
+  }
+
+  async function saveApplication() {
     saving.value = true
     error.value = ''
 
-    const newApplication = {
+    const applicationData = {
       company: company.value,
       position: position.value,
       appliedDate: appliedDate.value,
@@ -39,23 +60,35 @@
     }
 
     try {
-      const response = await fetch('/api/Applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newApplication),
-      })
+      let response
 
-      if (!response.ok) {
-        throw new Error('Could not create application')
+      if (editingId.value !== null) {
+        response = await fetch(`/api/Applications/${editingId.value}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(applicationData),
+        })
+      } else {
+        response = await fetch('/api/Applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(applicationData),
+        })
       }
 
-      company.value = ''
-      position.value = ''
-      appliedDate.value = ''
-      status.value = 'Applied'
+      if (!response.ok) {
+        throw new Error(
+          editingId.value !== null
+            ? 'Could not update application'
+            : 'Could not create application',
+        )
+      }
 
+      resetForm()
       await loadApplications()
     } catch (err) {
       error.value = err.message
@@ -75,9 +108,11 @@
     <p>Track your job and LIA applications in one place.</p>
 
     <section class="create-application">
-      <h2>Add application</h2>
+      <h2>
+        {{ editingId !== null ? 'Edit application' : 'Add application' }}
+      </h2>
 
-      <form @submit.prevent="createApplication">
+      <form @submit.prevent="saveApplication">
         <label>
           Company
           <input v-model="company" type="text" required />
@@ -104,7 +139,20 @@
         </label>
 
         <button type="submit" :disabled="saving">
-          {{ saving ? 'Saving...' : 'Add application' }}
+          {{
+            saving
+              ? 'Saving...'
+              : editingId !== null
+                ? 'Save changes'
+                : 'Add application'
+          }}
+        </button>
+
+        <button v-if="editingId !== null"
+                type="button"
+                class="cancel-button"
+                @click="cancelEdit">
+          Cancel
         </button>
       </form>
     </section>
@@ -123,6 +171,12 @@
         <h3>{{ application.company }}</h3>
         <p>{{ application.position }}</p>
         <span>{{ application.status }}</span>
+
+        <div class="card-actions">
+          <button type="button" @click="startEdit(application)">
+            Edit
+          </button>
+        </div>
       </div>
     </section>
   </main>
@@ -176,6 +230,10 @@
       opacity: 0.6;
     }
 
+  .cancel-button {
+    margin-top: -6px;
+  }
+
   .applications {
     margin-top: 40px;
   }
@@ -193,5 +251,13 @@
 
     .application-card p {
       margin: 0 0 10px;
+    }
+
+  .card-actions {
+    margin-top: 16px;
+  }
+
+    .card-actions button {
+      padding: 8px 14px;
     }
 </style>
