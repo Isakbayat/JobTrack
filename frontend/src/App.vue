@@ -1,4 +1,29 @@
 <script setup>
+  import { onMounted, ref } from 'vue'
+
+  const applications = ref([])
+  const loading = ref(true)
+  const error = ref('')
+
+  async function loadApplications() {
+    try {
+      const response = await fetch('/api/Applications')
+
+      if (!response.ok) {
+        throw new Error('Could not load applications')
+      }
+
+      applications.value = await response.json()
+    } catch (err) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  onMounted(() => {
+    loadApplications()
+  })
 </script>
 
 <template>
@@ -9,16 +34,17 @@
     <section class="applications">
       <h2>Applications</h2>
 
-      <div class="application-card">
-        <h3>Telenor</h3>
-        <p>System Developer Intern</p>
-        <span>Applied</span>
-      </div>
+      <p v-if="loading">Loading applications...</p>
 
-      <div class="application-card">
-        <h3>SEB</h3>
-        <p>.NET Developer Intern</p>
-        <span>Interview</span>
+      <p v-else-if="error">{{ error }}</p>
+
+      <div v-else
+           v-for="application in applications"
+           :key="application.id"
+           class="application-card">
+        <h3>{{ application.company }}</h3>
+        <p>{{ application.position }}</p>
+        <span>{{ application.status }}</span>
       </div>
     </section>
   </main>
