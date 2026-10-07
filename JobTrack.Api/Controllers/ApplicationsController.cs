@@ -1,4 +1,5 @@
 ﻿using JobTrack.Api.Data;
+using JobTrack.Api.Dtos;
 using JobTrack.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,8 +39,18 @@ namespace JobTrack.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<JobApplication>> Create(JobApplication application)
+        public async Task<ActionResult<JobApplication>> Create(
+            JobApplicationRequest request
+        )
         {
+            var application = new JobApplication
+            {
+                Company = request.Company,
+                Position = request.Position,
+                AppliedDate = request.AppliedDate,
+                Status = request.Status
+            };
+
             _context.JobApplications.Add(application);
 
             await _context.SaveChangesAsync();
@@ -54,7 +65,7 @@ namespace JobTrack.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(
             int id,
-            JobApplication updatedApplication
+            JobApplicationRequest request
         )
         {
             var application = await _context.JobApplications.FindAsync(id);
@@ -64,10 +75,10 @@ namespace JobTrack.Api.Controllers
                 return NotFound();
             }
 
-            application.Company = updatedApplication.Company;
-            application.Position = updatedApplication.Position;
-            application.AppliedDate = updatedApplication.AppliedDate;
-            application.Status = updatedApplication.Status;
+            application.Company = request.Company;
+            application.Position = request.Position;
+            application.AppliedDate = request.AppliedDate;
+            application.Status = request.Status;
 
             await _context.SaveChangesAsync();
 
