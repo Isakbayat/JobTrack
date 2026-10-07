@@ -1,5 +1,7 @@
-﻿using JobTrack.Api.Controllers;
+﻿using System.ComponentModel.DataAnnotations;
+using JobTrack.Api.Controllers;
 using JobTrack.Api.Data;
+using JobTrack.Api.Dtos;
 using JobTrack.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,11 +22,10 @@ namespace JobTrack.Api.Tests
         [Fact]
         public async Task Create_AddsApplicationToDatabase()
         {
-            // Arrange
             await using var context = CreateContext();
             var controller = new ApplicationsController(context);
 
-            var application = new JobApplication
+            var request = new JobApplicationRequest
             {
                 Company = "Telenor",
                 Position = "System Developer Intern",
@@ -32,10 +33,8 @@ namespace JobTrack.Api.Tests
                 Status = "Applied"
             };
 
-            // Act
-            var result = await controller.Create(application);
+            var result = await controller.Create(request);
 
-            // Assert
             var createdResult =
                 Assert.IsType<CreatedAtActionResult>(result.Result);
 
@@ -60,7 +59,6 @@ namespace JobTrack.Api.Tests
         [Fact]
         public async Task GetAll_ReturnsApplications()
         {
-            // Arrange
             await using var context = CreateContext();
 
             context.JobApplications.AddRange(
@@ -84,10 +82,8 @@ namespace JobTrack.Api.Tests
 
             var controller = new ApplicationsController(context);
 
-            // Act
             var result = await controller.GetAll();
 
-            // Assert
             var okResult =
                 Assert.IsType<OkObjectResult>(result.Result);
 
@@ -102,7 +98,6 @@ namespace JobTrack.Api.Tests
         [Fact]
         public async Task Update_ChangesExistingApplication()
         {
-            // Arrange
             await using var context = CreateContext();
 
             var application = new JobApplication
@@ -118,7 +113,7 @@ namespace JobTrack.Api.Tests
 
             var controller = new ApplicationsController(context);
 
-            var updatedApplication = new JobApplication
+            var request = new JobApplicationRequest
             {
                 Company = "Telenor",
                 Position = "Junior System Developer",
@@ -126,13 +121,11 @@ namespace JobTrack.Api.Tests
                 Status = "Offer"
             };
 
-            // Act
             var result = await controller.Update(
                 application.Id,
-                updatedApplication
+                request
             );
 
-            // Assert
             Assert.IsType<NoContentResult>(result);
 
             context.ChangeTracker.Clear();
@@ -151,7 +144,6 @@ namespace JobTrack.Api.Tests
         [Fact]
         public async Task Delete_RemovesApplication()
         {
-            // Arrange
             await using var context = CreateContext();
 
             var application = new JobApplication
@@ -167,15 +159,69 @@ namespace JobTrack.Api.Tests
 
             var controller = new ApplicationsController(context);
 
-            // Act
             var result = await controller.Delete(application.Id);
 
-            // Assert
             Assert.IsType<NoContentResult>(result);
 
             Assert.Equal(
                 0,
                 await context.JobApplications.CountAsync()
+            );
+        }
+
+        [Fact]
+        public void JobApplicationRequest_WithoutCompany_IsInvalid()
+        {
+            var request = new JobApplicationRequest
+            {
+                Company = "",
+                Position = "System Developer Intern",
+                AppliedDate = new DateTime(2026, 10, 7),
+                Status = "Applied"
+            };
+
+            var validationResults = new List<ValidationResult>();
+
+            var isValid = Validator.TryValidateObject(
+                request,
+                new ValidationContext(request),
+                validationResults,
+                true
+            );
+
+            Assert.False(isValid);
+
+            Assert.Contains(
+                validationResults,
+                result => result.MemberNames.Contains(nameof(request.Company))
+            );
+        }
+
+        [Fact]
+        public void JobApplicationRequest_WithInvalidStatus_IsInvalid()
+        {
+            var request = new JobApplicationRequest
+            {
+                Company = "Telenor",
+                Position = "System Developer Intern",
+                AppliedDate = new DateTime(2026, 10, 7),
+                Status = "Unknown"
+            };
+
+            var validationResults = new List<ValidationResult>();
+
+            var isValid = Validator.TryValidateObject(
+                request,
+                new ValidationContext(request),
+                validationResults,
+                true
+            );
+
+            Assert.False(isValid);
+
+            Assert.Contains(
+                validationResults,
+                result => result.MemberNames.Contains(nameof(request.Status))
             );
         }
     }
