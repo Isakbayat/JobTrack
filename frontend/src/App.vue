@@ -1,5 +1,6 @@
 <script setup>
   import { computed, onMounted, ref } from 'vue'
+  import ApplicationCard from './components/ApplicationCard.vue'
 
   const applications = ref([])
   const loading = ref(true)
@@ -164,17 +165,6 @@
     }
   }
 
-  function formatDate(date) {
-    const datePart = date.split('T')[0]
-    const [year, month, day] = datePart.split('-')
-
-    return `${day}/${month}/${year}`
-  }
-
-  function getStatusClass(applicationStatus) {
-    return `status-${applicationStatus.toLowerCase()}`
-  }
-
   onMounted(() => {
     loadApplications()
   })
@@ -186,7 +176,9 @@
       <header class="hero">
         <div>
           <p class="eyebrow">APPLICATION TRACKER</p>
+
           <h1>JobTrack</h1>
+
           <p class="subtitle">
             Keep track of your job and LIA applications in one place.
           </p>
@@ -194,6 +186,7 @@
 
         <div class="application-count">
           <strong>{{ applications.length }}</strong>
+
           <span>
             {{ applications.length === 1 ? 'application' : 'applications' }}
           </span>
@@ -225,6 +218,7 @@
           <div class="form-grid">
             <label>
               <span>Company</span>
+
               <input v-model="company"
                      type="text"
                      placeholder="e.g. Telenor"
@@ -233,6 +227,7 @@
 
             <label>
               <span>Position</span>
+
               <input v-model="position"
                      type="text"
                      placeholder="e.g. System Developer Intern"
@@ -241,11 +236,15 @@
 
             <label>
               <span>Applied date</span>
-              <input v-model="appliedDate" type="date" required />
+
+              <input v-model="appliedDate"
+                     type="date"
+                     required />
             </label>
 
             <label>
               <span>Status</span>
+
               <select v-model="status">
                 <option value="Applied">Applied</option>
                 <option value="Interview">Interview</option>
@@ -256,7 +255,9 @@
           </div>
 
           <div class="form-actions">
-            <button class="primary-button" type="submit" :disabled="saving">
+            <button class="primary-button"
+                    type="submit"
+                    :disabled="saving">
               {{
                 saving
                   ? 'Saving...'
@@ -287,6 +288,7 @@
         <div class="filter-bar">
           <label class="filter-field">
             <span>Search</span>
+
             <input v-model="searchTerm"
                    type="text"
                    placeholder="Search company or position..." />
@@ -294,6 +296,7 @@
 
           <label class="filter-field">
             <span>Status</span>
+
             <select v-model="statusFilter">
               <option value="All">All statuses</option>
               <option value="Applied">Applied</option>
@@ -310,7 +313,8 @@
           {{ applications.length }} applications
         </p>
 
-        <div v-if="loading" class="panel state-panel">
+        <div v-if="loading"
+             class="panel state-panel">
           Loading applications...
         </div>
 
@@ -326,41 +330,13 @@
           <p>Try another search or status filter.</p>
         </div>
 
-        <div v-else class="applications-grid">
-          <article v-for="application in filteredApplications"
-                   :key="application.id"
-                   class="application-card">
-            <div class="card-header">
-              <div>
-                <p class="company-name">{{ application.company }}</p>
-                <h3>{{ application.position }}</h3>
-              </div>
-
-              <span class="status-badge"
-                    :class="getStatusClass(application.status)">
-                {{ application.status }}
-              </span>
-            </div>
-
-            <div class="application-meta">
-              <span>Applied</span>
-              <strong>{{ formatDate(application.appliedDate) }}</strong>
-            </div>
-
-            <div class="card-actions">
-              <button class="edit-button"
-                      type="button"
-                      @click="startEdit(application)">
-                Edit
-              </button>
-
-              <button class="delete-button"
-                      type="button"
-                      @click="deleteApplication(application)">
-                Delete
-              </button>
-            </div>
-          </article>
+        <div v-else
+             class="applications-grid">
+          <ApplicationCard v-for="application in filteredApplications"
+                           :key="application.id"
+                           :application="application"
+                           @edit="startEdit"
+                           @delete="deleteApplication" />
         </div>
       </section>
     </main>
@@ -389,7 +365,7 @@
 
   .page-shell {
     min-height: 100vh;
-    background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 34%), #0b1120;
+    background: radial-gradient( circle at top left, rgba(37, 99, 235, 0.16), transparent 34% ), #0b1120;
   }
 
   .app {
@@ -585,115 +561,6 @@
     gap: 16px;
   }
 
-  .application-card {
-    padding: 24px;
-    border: 1px solid #1e293b;
-    border-radius: 16px;
-    background: #0f172a;
-    transition: transform 0.2s ease, border-color 0.2s ease;
-  }
-
-    .application-card:hover {
-      transform: translateY(-2px);
-      border-color: #334155;
-    }
-
-  .card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-  }
-
-  .company-name {
-    margin: 0 0 5px;
-    color: #60a5fa;
-    font-size: 14px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .application-card h3 {
-    margin: 0;
-    color: #f8fafc;
-    font-size: 21px;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-    padding: 6px 11px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  .status-applied {
-    background: rgba(59, 130, 246, 0.15);
-    color: #93c5fd;
-  }
-
-  .status-interview {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fcd34d;
-  }
-
-  .status-offer {
-    background: rgba(34, 197, 94, 0.15);
-    color: #86efac;
-  }
-
-  .status-rejected {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-  }
-
-  .application-meta {
-    display: flex;
-    gap: 8px;
-    margin-top: 18px;
-    color: #64748b;
-    font-size: 14px;
-  }
-
-    .application-meta strong {
-      color: #cbd5e1;
-      font-weight: 600;
-    }
-
-  .card-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid #1e293b;
-  }
-
-  .edit-button,
-  .delete-button {
-    padding: 9px 15px;
-  }
-
-  .edit-button {
-    background: #1e293b;
-    color: #e2e8f0;
-  }
-
-    .edit-button:hover {
-      background: #334155;
-    }
-
-  .delete-button {
-    background: rgba(239, 68, 68, 0.12);
-    color: #fca5a5;
-  }
-
-    .delete-button:hover {
-      background: rgba(239, 68, 68, 0.2);
-    }
-
   .state-panel {
     padding: 32px;
     color: #94a3b8;
@@ -751,10 +618,6 @@
 
     .form-panel {
       padding: 22px;
-    }
-
-    .card-header {
-      flex-direction: column;
     }
   }
 </style>
