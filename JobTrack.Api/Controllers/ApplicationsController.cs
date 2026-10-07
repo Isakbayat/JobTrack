@@ -1,5 +1,7 @@
-﻿using JobTrack.Api.Models;
+﻿using JobTrack.Api.Data;
+using JobTrack.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobTrack.Api.Controllers
 {
@@ -7,37 +9,25 @@ namespace JobTrack.Api.Controllers
     [ApiController]
     public class ApplicationsController : ControllerBase
     {
-        private static readonly List<JobApplication> applications = new List<JobApplication>
-        {
-            new JobApplication
-            {
-                Id = 1,
-                Company = "Telenor",
-                Position = "System Developer Intern",
-                AppliedDate = new DateTime(2026, 9, 9),
-                Status = "Applied"
-            },
+        private readonly AppDbContext _context;
 
-            new JobApplication
-            {
-                Id = 2,
-                Company = "SEB",
-                Position = ".NET Developer Intern",
-                AppliedDate = new DateTime(2026, 9, 8),
-                Status = "Interview"
-            }
-        };
+        public ApplicationsController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
-        public ActionResult<IEnumerable<JobApplication>> GetAll()
+        public async Task<ActionResult<IEnumerable<JobApplication>>> GetAll()
         {
+            var applications = await _context.JobApplications.ToListAsync();
+
             return Ok(applications);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<JobApplication> GetById(int id)
+        public async Task<ActionResult<JobApplication>> GetById(int id)
         {
-            var application = applications.FirstOrDefault(a => a.Id == id);
+            var application = await _context.JobApplications.FindAsync(id);
 
             if (application == null)
             {
@@ -48,11 +38,11 @@ namespace JobTrack.Api.Controllers
         }
 
         [HttpPost]
-        public ActionResult<JobApplication> Create(JobApplication application)
+        public async Task<ActionResult<JobApplication>> Create(JobApplication application)
         {
-            application.Id = applications.Max(a => a.Id) + 1;
+            _context.JobApplications.Add(application);
 
-            applications.Add(application);
+            await _context.SaveChangesAsync();
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -62,9 +52,12 @@ namespace JobTrack.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(int id, JobApplication updatedApplication)
+        public async Task<IActionResult> Update(
+            int id,
+            JobApplication updatedApplication
+        )
         {
-            var application = applications.FirstOrDefault(a => a.Id == id);
+            var application = await _context.JobApplications.FindAsync(id);
 
             if (application == null)
             {
@@ -76,20 +69,24 @@ namespace JobTrack.Api.Controllers
             application.AppliedDate = updatedApplication.AppliedDate;
             application.Status = updatedApplication.Status;
 
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var application = applications.FirstOrDefault(a => a.Id == id);
+            var application = await _context.JobApplications.FindAsync(id);
 
             if (application == null)
             {
                 return NotFound();
             }
 
-            applications.Remove(application);
+            _context.JobApplications.Remove(application);
+
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
