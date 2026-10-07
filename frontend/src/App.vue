@@ -1,5 +1,5 @@
 <script setup>
-  import { onMounted, ref } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
 
   const applications = ref([])
   const loading = ref(true)
@@ -12,6 +12,25 @@
   const position = ref('')
   const appliedDate = ref('')
   const status = ref('Applied')
+
+  const searchTerm = ref('')
+  const statusFilter = ref('All')
+
+  const filteredApplications = computed(() => {
+    return applications.value.filter((application) => {
+      const search = searchTerm.value.toLowerCase().trim()
+
+      const matchesSearch =
+        application.company.toLowerCase().includes(search) ||
+        application.position.toLowerCase().includes(search)
+
+      const matchesStatus =
+        statusFilter.value === 'All' ||
+        application.status === statusFilter.value
+
+      return matchesSearch && matchesStatus
+    })
+  })
 
   async function loadApplications() {
     try {
@@ -265,6 +284,32 @@
           </div>
         </div>
 
+        <div class="filter-bar">
+          <label class="filter-field">
+            <span>Search</span>
+            <input v-model="searchTerm"
+                   type="text"
+                   placeholder="Search company or position..." />
+          </label>
+
+          <label class="filter-field">
+            <span>Status</span>
+            <select v-model="statusFilter">
+              <option value="All">All statuses</option>
+              <option value="Applied">Applied</option>
+              <option value="Interview">Interview</option>
+              <option value="Offer">Offer</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </label>
+        </div>
+
+        <p v-if="!loading && applications.length > 0"
+           class="results-count">
+          Showing {{ filteredApplications.length }} of
+          {{ applications.length }} applications
+        </p>
+
         <div v-if="loading" class="panel state-panel">
           Loading applications...
         </div>
@@ -275,8 +320,14 @@
           <p>Add your first application using the form above.</p>
         </div>
 
+        <div v-else-if="filteredApplications.length === 0"
+             class="panel state-panel empty-state">
+          <h3>No matching applications</h3>
+          <p>Try another search or status filter.</p>
+        </div>
+
         <div v-else class="applications-grid">
-          <article v-for="application in applications"
+          <article v-for="application in filteredApplications"
                    :key="application.id"
                    class="application-card">
             <div class="card-header">
@@ -507,6 +558,28 @@
     margin-bottom: 20px;
   }
 
+  .filter-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+    gap: 16px;
+    margin-bottom: 12px;
+    padding: 20px;
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.82);
+  }
+
+  .filter-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .results-count {
+    margin: 0 0 18px;
+    color: #64748b;
+    font-size: 13px;
+  }
+
   .applications-grid {
     display: grid;
     gap: 16px;
@@ -671,7 +744,8 @@
       width: fit-content;
     }
 
-    .form-grid {
+    .form-grid,
+    .filter-bar {
       grid-template-columns: 1fr;
     }
 
