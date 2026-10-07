@@ -78,5 +78,20 @@ namespace JobTrack.Api.Controllers
 
             return NoContent();
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var application = applications.FirstOrDefault(a => a.Id == id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            applications.Remove(application);
+
+            return NoContent();
+        }
     }
 }

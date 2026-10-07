@@ -97,6 +97,36 @@
     }
   }
 
+  async function deleteApplication(application) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the application for ${application.company}?`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    error.value = ''
+
+    try {
+      const response = await fetch(`/api/Applications/${application.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Could not delete application')
+      }
+
+      if (editingId.value === application.id) {
+        resetForm()
+      }
+
+      await loadApplications()
+    } catch (err) {
+      error.value = err.message
+    }
+  }
+
   onMounted(() => {
     loadApplications()
   })
@@ -175,6 +205,12 @@
         <div class="card-actions">
           <button type="button" @click="startEdit(application)">
             Edit
+          </button>
+
+          <button type="button"
+                  class="delete-button"
+                  @click="deleteApplication(application)">
+            Delete
           </button>
         </div>
       </div>
@@ -260,4 +296,8 @@
     .card-actions button {
       padding: 8px 14px;
     }
+
+  .delete-button {
+    margin-left: 8px;
+  }
 </style>
