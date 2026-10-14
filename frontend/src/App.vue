@@ -2,6 +2,8 @@
   import { computed, onMounted, ref } from 'vue'
   import ApplicationCard from './components/ApplicationCard.vue'
 
+  const apiUrl = import.meta.env.VITE_API_URL || ''
+
   const applications = ref([])
   const loading = ref(true)
   const error = ref('')
@@ -35,7 +37,7 @@
 
   async function loadApplications() {
     try {
-      const response = await fetch('/api/Applications')
+      const response = await fetch(`${apiUrl}/api/Applications`)
 
       if (!response.ok) {
         throw new Error('Could not load applications')
@@ -95,7 +97,7 @@
       let response
 
       if (isEditing) {
-        response = await fetch(`/api/Applications/${editingId.value}`, {
+        response = await fetch(`${apiUrl}/api/Applications/${editingId.value}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -103,7 +105,7 @@
           body: JSON.stringify(applicationData),
         })
       } else {
-        response = await fetch('/api/Applications', {
+        response = await fetch(`${apiUrl}/api/Applications`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -146,7 +148,7 @@
     message.value = ''
 
     try {
-      const response = await fetch(`/api/Applications/${application.id}`, {
+      const response = await fetch(`${apiUrl}/api/Applications/${application.id}`, {
         method: 'DELETE',
       })
 
