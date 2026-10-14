@@ -47,7 +47,10 @@ namespace JobTrack.Api.Controllers
             {
                 Company = request.Company,
                 Position = request.Position,
-                AppliedDate = request.AppliedDate,
+                AppliedDate = DateTime.SpecifyKind(
+                    request.AppliedDate,
+                    DateTimeKind.Utc
+                ),
                 Status = request.Status
             };
 
@@ -77,7 +80,10 @@ namespace JobTrack.Api.Controllers
 
             application.Company = request.Company;
             application.Position = request.Position;
-            application.AppliedDate = request.AppliedDate;
+            application.AppliedDate = DateTime.SpecifyKind(
+                request.AppliedDate,
+                DateTimeKind.Utc
+            );
             application.Status = request.Status;
 
             await _context.SaveChangesAsync();
