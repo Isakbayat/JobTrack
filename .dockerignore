@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+.git/
+.gitignore
+.vs/
+publish-test/
+frontend/dist/
+*.db
+*.db-shm
+*.db-wal
